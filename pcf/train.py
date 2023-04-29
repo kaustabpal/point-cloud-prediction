@@ -170,20 +170,20 @@ if __name__ == "__main__":
     trainer.fit(model, data)
     
     ###### Testing
-    #logger = TensorBoardLogger(
-    #    save_dir=cfg["LOG_DIR"], default_hp_metric=False, name="test", version=""
-    #)
-    #checkpoint_path = cfg["LOG_DIR"] + "/checkpoints/min_val_loss.ckpt"
-    #model = TCNet.load_from_checkpoint(checkpoint_path, cfg=cfg)
-    #results = trainer.test(model, data.test_dataloader())
+    logger = TensorBoardLogger(
+        save_dir=cfg["LOG_DIR"], default_hp_metric=False, name="test", version=""
+    )
+    checkpoint_path = cfg["LOG_DIR"] + "/checkpoints/min_val_loss.ckpt"
+    model = TCNet.load_from_checkpoint(checkpoint_path, cfg=cfg)
+    results = trainer.test(model, data.test_dataloader())
 
-    #if logger:
-    #    filename = os.path.join(
-    #        cfg["LOG_DIR"], "test", "results_" + time.strftime("%Y%m%d_%H%M%S") + ".yml"
-    #    )
-    #    log_to_save = {**{"results": results}, **vars(args), **cfg}
-    #    with open(filename, "w") as yaml_file:
-    #        yaml.dump(log_to_save, yaml_file, default_flow_style=False)
+    if logger:
+        filename = os.path.join(
+            cfg["LOG_DIR"], "test", "results_" + time.strftime("%Y%m%d_%H%M%S") + ".yml"
+        )
+        log_to_save = {**{"results": results}, **vars(args), **cfg}
+        with open(filename, "w") as yaml_file:
+            yaml.dump(log_to_save, yaml_file, default_flow_style=False)
 
 
 

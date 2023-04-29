@@ -168,6 +168,10 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
     future_range = batch["fut_data"][sample_index, 0, :, :, :].view(
         n_future_steps, H, W
     )
+    future_object_mask = batch["fut_data"][sample_index, 4, :, :, :].view(
+        n_future_steps, H, W
+    )
+    future_ground_mask = torch.logical_not(future_object_mask)
 
     pred_rv = output["rv"][sample_index, :, :, :].view(n_future_steps, H, W)
 
@@ -215,60 +219,79 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
 
         ratio = 5 * H / W
         props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
-        fig, axs = plt.subplots(5, 1, sharex=True, figsize=(30, 30 * ratio))
-        axs[0].imshow(concat_gt_rv_normalized[s, :, :].cpu().detach().numpy()*255, cmap=mpl.colormaps['cool'])
+        fig, axs = plt.subplots(6, 1, sharex=True, figsize=(30, 30 * ratio))
+        axs[0].imshow(concat_gt_rv_normalized[s, :, :].cpu().detach().numpy(), cmap=mpl.colormaps['tab20b'])
         axs[0].text(
             0.01,
             0.8,
-            "GT RV",
+            "GT",
             transform=axs[0].transAxes,
-            fontsize=14,
+            fontsize=10,
             verticalalignment="top",
             bbox=props,
         )
 
         axs[1].imshow(
-            concat_combined_pred_rv_normalized[s, :, :].cpu().detach().numpy()*255, cmap=mpl.colormaps['cool']
+            concat_combined_pred_rv_normalized[s, :, :].cpu().detach().numpy(), cmap=mpl.colormaps['tab20b']
         )
         axs[1].text(
             0.01,
             0.8,
-            "Pred Comb",
+            "Pred",
             transform=axs[1].transAxes,
-            fontsize=14,
+            fontsize=10,
             verticalalignment="top",
             bbox=props,
         )
-
-        axs[2].imshow(concat_pred_rv_normalized[s, :, :].cpu().detach().numpy()*255, cmap=mpl.colormaps['cool'])
+        axs[2].imshow(
+            np.abs(
+                concat_combined_pred_rv_normalized[s, :, :].cpu().detach().numpy()
+                - concat_gt_rv_normalized[s, :, :].cpu().detach().numpy()), cmap=mpl.colormaps['tab20b']
+        )
         axs[2].text(
             0.01,
             0.8,
-            "Pred RV",
+            "Range Loss",
             transform=axs[2].transAxes,
-            fontsize=14,
+            fontsize=10,
             verticalalignment="top",
             bbox=props,
         )
+        objects_gt = future_object_mask[s-5, :, :]*concat_gt_rv_normalized[s, :, :]*255
+        objects_pred = future_object_mask[s-5, :, :]*concat_combined_pred_rv_normalized[s, :, :]*255
+        objects_range_loss = np.abs(
+                objects_gt.cpu().detach().numpy()
+                - objects_pred.cpu().detach().numpy())
 
-        axs[3].imshow(concat_gt_mask[s, :, :].cpu().detach().numpy())
+        axs[3].imshow(objects_gt.cpu().detach().numpy(), cmap=mpl.colormaps['tab20b'])
         axs[3].text(
             0.01,
             0.8,
-            "GT Mask",
+            "Objects GT",
             transform=axs[3].transAxes,
-            fontsize=14,
+            fontsize=10,
             verticalalignment="top",
             bbox=props,
         )
 
-        axs[4].imshow(concat_pred_mask[s, :, :].cpu().detach().numpy())
+        axs[4].imshow(objects_pred.cpu().detach().numpy(), cmap=mpl.colormaps['tab20b'])
         axs[4].text(
             0.01,
             0.8,
-            "Pred Mask",
+            "Objects Pred",
             transform=axs[4].transAxes,
-            fontsize=14,
+            fontsize=10,
+            verticalalignment="top",
+            bbox=props,
+        )
+
+        axs[5].imshow(objects_range_loss, cmap=mpl.colormaps['tab20b'])
+        axs[5].text(
+            0.01,
+            0.8,
+            "Objects Range Loss",
+            transform=axs[5].transAxes,
+            fontsize=10,
             verticalalignment="top",
             bbox=props,
         )

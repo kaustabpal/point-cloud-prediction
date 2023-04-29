@@ -248,6 +248,7 @@ class KittiOdometryRaw(Dataset):
                 (intensity==70) | (intensity==40)\
                         | (intensity==44) | (intensity==48)\
                         | (intensity==49) | (intensity==50)\
+                        | (intensity==72)\
                 ).type(torch.uint8)
         object_mask = torch.logical_not(ground_mask)
         return object_mask # intensity

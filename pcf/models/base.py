@@ -94,7 +94,7 @@ class BasePredictionModel(LightningModule):
         future = batch["fut_data"]
         output = self.forward(past)
         #print(self.current_epoch)
-        loss = self.loss(output, future, "train")
+        loss = self.loss(output, future, "train", self.current_epoch)
         #print(loss["loss"].item())
         self.log("train/loss", loss["loss"])
         self.log("train/mean_chamfer_distance", loss["mean_chamfer_distance"])
@@ -118,7 +118,7 @@ class BasePredictionModel(LightningModule):
         future = batch["fut_data"]
         output = self.forward(past)
 
-        loss = self.loss(output, future, "val")
+        loss = self.loss(output, future, "val", self.current_epoch)
 
         self.log("val/loss", loss["loss"], on_epoch=True)
         self.log(
@@ -173,7 +173,6 @@ class BasePredictionModel(LightningModule):
         Returns:
             loss (dict): Multiple loss components
         """
-        print("Test")
         past = batch["past_data"]
         future = batch["fut_data"]
 
@@ -184,7 +183,7 @@ class BasePredictionModel(LightningModule):
         inference_time = (time.time() - start) / batch_size
         self.log("test/inference_time", inference_time, on_epoch=True)
 
-        loss = self.loss(output, future, "test")
+        loss = self.loss(output, future, "test", self.current_epoch)
 
         self.log("test/loss_range_view", loss["loss_range_view"], on_epoch=True)
         self.log("test/loss_mask", loss["loss_mask"], on_epoch=True)

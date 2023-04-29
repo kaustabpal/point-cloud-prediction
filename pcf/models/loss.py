@@ -26,7 +26,7 @@ class Loss(nn.Module):
         self.chamfer_distance = chamfer_distance(self.cfg)
         self.loss_mask = loss_mask(self.cfg)
 
-    def forward(self, output, target, mode):
+    def forward(self, output, target, mode, epoch_number):
         """Forward pass with multiple loss components
 
         Args:
@@ -39,17 +39,18 @@ class Loss(nn.Module):
         """
 
         target_range_image = target[:, 0, :, :, :]
-        target_semantic_label = target[:, 4, :, :, :]
-        
-        ground_mask = (
-                (target_semantic_label==70) | (target_semantic_label==40)\
-                        | (target_semantic_label==44) | (target_semantic_label==48)\
-                        | (target_semantic_label==49) | (target_semantic_label==50)\
-                ).type(torch.uint8)
-        object_mask = torch.logical_not(ground_mask)
+        object_mask = target[:, 4, :, :, :]
+        ground_mask = torch.logical_not(object_mask)
+        #ground_mask = (
+        #        (target_semantic_label==70) | (target_semantic_label==40)\
+        #                | (target_semantic_label==44) | (target_semantic_label==48)\
+        #                | (target_semantic_label==49) | (target_semantic_label==50)\
+        #        ).type(torch.uint8)
+        #object_mask = torch.logical_not(ground_mask)
 
         # Range view
-        loss_range_view = self.loss_range(output, target_range_image, ground_mask, object_mask)
+        loss_range_view = self.loss_range(output, target_range_image,
+                ground_mask, object_mask, epoch_number)
 
         # Mask
         loss_mask = self.loss_mask(output, target_range_image)
@@ -117,14 +118,26 @@ class loss_range(nn.Module):
         self.cfg = cfg
         self.loss = nn.L1Loss(reduction="mean")
 
-    def forward(self, output, target_range_image, ground_mask, object_mask):
+    def forward(self, output, target_range_image,
+            ground_mask, object_mask, epoch_number):
+
+        if(epoch_number>=0 and epoch_number<10):
+            w = 1
+        elif(epoch_number>=10 and epoch_number<20):
+            w = 2
+        elif(epoch_number>=20 and epoch_number<30):
+            w = 4
+        elif(epoch_number>=30 and epoch_number<40):
+            w = 8
+        elif(epoch_number>=40 and epoch_number<50):
+           w = 10
         # Do not count L1 loss for invalid GT points
         gt_masked_output = output["rv"].clone()
         gt_masked_output[target_range_image == -1.0] = -1.0
-
+        w = 2
         #loss = self.loss(gt_masked_output, target_range_image)
         loss = self.loss(ground_mask*gt_masked_output, ground_mask*target_range_image)\
-                + 4*self.loss(object_mask*gt_masked_output, object_mask*target_range_image)
+                + w*self.loss(object_mask*gt_masked_output, object_mask*target_range_image)
         return loss
 
 
