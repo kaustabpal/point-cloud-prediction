@@ -1,5 +1,5 @@
 EXPERIMENT:
-  ID: sem_in_sem_mask_loss_w_2 # Give your experiment a unique ID which is used in the log
+  ID: sem_in_sem_mask_loss_w_anneal # Give your experiment a unique ID which is used in the log
 
 DATA_CONFIG:
   DATASET_NAME: KITTIOdometry
