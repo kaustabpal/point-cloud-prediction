@@ -226,7 +226,8 @@ class KittiOdometryRaw(Dataset):
             fut_data[1:4, t, :, :] = self.load_xyz(fut_filenames_xyz[t])
             fut_data[4, t, :, :] = self.load_intensity(fut_filenames_intensity[t])
 
-        item = {"past_data": past_data, "fut_data": fut_data, "meta": (seq, scan_idx)}
+        item = {"past_data": past_data, "fut_data": fut_data, 
+                "meta": (seq, scan_idx)}
         return item
 
     def load_range(self, filename):
