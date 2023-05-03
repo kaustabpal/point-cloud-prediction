@@ -1,5 +1,5 @@
 EXPERIMENT:
-  ID: sem_in_sem_mask_loss_w_anneal # Give your experiment a unique ID which is used in the log
+  ID: range_in_sem_mask_loss_w_2 # Give your experiment a unique ID which is used in the log
 
 DATA_CONFIG:
   DATASET_NAME: KITTIOdometry
@@ -50,7 +50,7 @@ MODEL:
   MASK_THRESHOLD: 0.5 # Threshold for valid point mask classification
   USE:
     XYZ: False # If true: x,y, and z coordinates will be used as additional input channels
-    INTENSITY: True # If true: intensity will be used as additional input channel
+    INTENSITY: False # If true: intensity will be used as additional input channel
   CHANNELS: # Number of channels in encoder and decoder, respectively.
     - 16
     - 32
@@ -96,5 +96,5 @@ TEST:
   N_BATCHES_TO_SAVE: -1 # If set to -1 and SAVE_POINT_CLOUDS is true, all batches of the test set will be saved.
   SAVE_POINT_CLOUDS: True
   N_DOWNSAMPLED_POINTS_CD: -1 # Can evaluate the CD on downsampled point clouds. Set -1 to evaluate on full point clouds.
-  USE_OBJECT_MASK: True
+  USE_OBJECT_MASK: False
   USE_GROUND_MASK: False
