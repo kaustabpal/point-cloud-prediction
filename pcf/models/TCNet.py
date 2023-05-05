@@ -8,7 +8,6 @@ import yaml
 
 from pcf.models.base import BasePredictionModel
 
-
 class CustomConv3d(nn.Module):
     """Custom 3D Convolution that enables circular padding along the width dimension only"""
 
@@ -65,6 +64,7 @@ class CustomConv3d(nn.Module):
 class TCNet(BasePredictionModel):
     def __init__(self, cfg):
         """Init all layers needed for range image-based point cloud prediction"""
+        print("Import done")
         super().__init__(cfg)
         self.channels = self.cfg["MODEL"]["CHANNELS"]
         self.skip_if_channel_size = self.cfg["MODEL"]["SKIP_IF_CHANNEL_SIZE"]

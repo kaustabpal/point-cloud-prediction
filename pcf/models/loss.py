@@ -39,8 +39,8 @@ class Loss(nn.Module):
         """
 
         target_range_image = target[:, 0, :, :, :]
-        object_mask = target[:, 4, :, :, :]
-        ground_mask = torch.logical_not(object_mask)
+        cycle_mask = target[:, 4, :, :, :]
+        non_cycle_mask = torch.logical_not(object_mask)
         #target[:, 0, :, :, :] = target[:, 0, :, :, :]*object_mask
         #target[:, 1, :, :, :] = target[:, 1, :, :, :]*object_mask
         #target[:, 2, :, :, :] = target[:, 2, :, :, :]*object_mask
@@ -55,7 +55,7 @@ class Loss(nn.Module):
 
         # Range view
         loss_range_view = self.loss_range(output, target_range_image,
-                ground_mask, object_mask, epoch_number)
+                non_cycle_mask, cycle_mask, epoch_number)
 
         # Mask
         loss_mask = self.loss_mask(output, target_range_image)

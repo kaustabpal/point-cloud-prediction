@@ -122,6 +122,7 @@ if __name__ == "__main__":
     ###### Dataset
     data = KittiOdometryModule(cfg)
     data.setup()
+    print("data setup done")
 
     ###### Model
     model = TCNet(cfg)
@@ -160,6 +161,7 @@ if __name__ == "__main__":
         callbacks=[lr_monitor, checkpoint],
         default_root_dir='log',
         strategy = DDPStrategy(find_unused_parameters=False),
+        #precision=16,
         check_val_every_n_epoch=5,
         limit_train_batches=1.0,
         limit_val_batches=1.0,

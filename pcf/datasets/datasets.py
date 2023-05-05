@@ -245,14 +245,14 @@ class KittiOdometryRaw(Dataset):
         """Load .npy intensity values as (1,height,width) tensor"""
         semantic_np = np.load(filename)
         intensity = torch.Tensor(semantic_np)
-        ground_mask = (
-                (intensity==70) | (intensity==40)\
-                        | (intensity==44) | (intensity==48)\
-                        | (intensity==49) | (intensity==50)\
-                        | (intensity==72)\
+        
+        cycle_mask = (
+                (intensity==253) | (intensity==255)\
+                        | (intensity==31) | (intensity==32)\
+                        | (intensity==11) | (intensity==15)\
                 ).type(torch.uint8)
-        object_mask = torch.logical_not(ground_mask)
-        return object_mask # intensity
+        #object_mask = torch.logical_not(ground_mask)
+        return cycle_mask # intensity
 
 
 if __name__ == "__main__":
