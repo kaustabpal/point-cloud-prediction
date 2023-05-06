@@ -4,6 +4,7 @@
 import os
 import torch
 import matplotlib
+import cmocean
 import open3d as o3d
 import numpy as np
 import torch.nn.functional as F
@@ -158,6 +159,8 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
         sequence (int): Selected dataset sequence
         frame (int): Selected frame number
     """
+    #cmap = cmocean.cm.thermal
+    cmap = mpl.colormaps["turbo"]
     _, _, n_past_steps, H, W = batch["past_data"].shape
     _, _, n_future_steps, _, _ = batch["fut_data"].shape
 
@@ -220,7 +223,7 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
         ratio = 5 * H / W
         props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
         fig, axs = plt.subplots(6, 1, sharex=True, figsize=(30, 30 * ratio))
-        axs[0].imshow(concat_gt_rv_normalized[s, :, :].cpu().detach().numpy(), cmap=mpl.colormaps['tab20b'])
+        axs[0].imshow(concat_gt_rv_normalized[s, :, :].cpu().detach().numpy(), cmap=cmap)
         axs[0].text(
             0.01,
             0.8,
@@ -232,7 +235,7 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
         )
 
         axs[1].imshow(
-            concat_combined_pred_rv_normalized[s, :, :].cpu().detach().numpy(), cmap=mpl.colormaps['tab20b']
+            concat_combined_pred_rv_normalized[s, :, :].cpu().detach().numpy(), cmap=cmap
         )
         axs[1].text(
             0.01,
@@ -246,7 +249,7 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
         axs[2].imshow(
             np.abs(
                 concat_combined_pred_rv_normalized[s, :, :].cpu().detach().numpy()
-                - concat_gt_rv_normalized[s, :, :].cpu().detach().numpy()), cmap=mpl.colormaps['tab20b']
+                - concat_gt_rv_normalized[s, :, :].cpu().detach().numpy()), cmap=cmap
         )
         axs[2].text(
             0.01,
@@ -263,7 +266,7 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
                 objects_gt.cpu().detach().numpy()
                 - objects_pred.cpu().detach().numpy())
 
-        axs[3].imshow(objects_gt.cpu().detach().numpy(), cmap=mpl.colormaps['tab20b'])
+        axs[3].imshow(objects_gt.cpu().detach().numpy(), cmap=cmap)
         axs[3].text(
             0.01,
             0.8,
@@ -274,7 +277,7 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
             bbox=props,
         )
 
-        axs[4].imshow(objects_pred.cpu().detach().numpy(), cmap=mpl.colormaps['tab20b'])
+        axs[4].imshow(objects_pred.cpu().detach().numpy(), cmap=cmap)
         axs[4].text(
             0.01,
             0.8,
@@ -285,7 +288,7 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
             bbox=props,
         )
 
-        axs[5].imshow(objects_range_loss, cmap=mpl.colormaps['tab20b'])
+        axs[5].imshow(objects_range_loss, cmap=cmap)
         axs[5].text(
             0.01,
             0.8,
