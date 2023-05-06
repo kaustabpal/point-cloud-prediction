@@ -1,5 +1,5 @@
 EXPERIMENT:
-  ID: range_in_cycle_mask_loss_w_2 # Give your experiment a unique ID which is used in the log
+  ID: range_in_small_obj_mask # Give your experiment a unique ID which is used in the log
 
 DATA_CONFIG:
   DATASET_NAME: KITTIOdometry
