@@ -132,3 +132,4 @@ dmypy.json
 .pyre/
 
 run_test.sh
+run_obj_labels.sh
