@@ -247,9 +247,8 @@ class KittiOdometryRaw(Dataset):
         intensity = torch.Tensor(semantic_np)
         
         cycle_mask = (
-                (intensity==253) | (intensity==255)\
-                        | (intensity==31) | (intensity==32)\
-                        | (intensity==11) | (intensity==15)\
+                (intensity==self.cfg["TEST"]["OBJECT_LABEL"]) \
+                        # | (intensity==31) \
                 ).type(torch.uint8)
         #object_mask = torch.logical_not(ground_mask)
         return cycle_mask # intensity

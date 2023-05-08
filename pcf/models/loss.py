@@ -39,8 +39,8 @@ class Loss(nn.Module):
         """
 
         target_range_image = target[:, 0, :, :, :]
-        cycle_mask = target[:, 4, :, :, :]
-        non_cycle_mask = torch.logical_not(object_mask)
+        object_mask = target[:, 4, :, :, :]
+        non_object_mask = torch.logical_not(object_mask)
         #target[:, 0, :, :, :] = target[:, 0, :, :, :]*object_mask
         #target[:, 1, :, :, :] = target[:, 1, :, :, :]*object_mask
         #target[:, 2, :, :, :] = target[:, 2, :, :, :]*object_mask
@@ -55,7 +55,7 @@ class Loss(nn.Module):
 
         # Range view
         loss_range_view = self.loss_range(output, target_range_image,
-                non_cycle_mask, cycle_mask, epoch_number)
+                non_object_mask, object_mask, epoch_number)
 
         # Mask
         loss_mask = self.loss_mask(output, target_range_image)
@@ -69,7 +69,7 @@ class Loss(nn.Module):
                 chamfer_distance
             )
             detached_chamfer_distance = {
-                step: cd.detach() for step, cd in chamfer_distance.items()
+                step: cd for step, cd in chamfer_distance.items()
             }
         else:
             chamfer_distance = dict(
@@ -89,13 +89,13 @@ class Loss(nn.Module):
         loss_dict = {
             "loss": loss,
             "chamfer_distance": detached_chamfer_distance,
-            "chamfer_distances_tensor": chamfer_distances_tensor.detach(),
-            "mean_chamfer_distance": loss_chamfer_distance.detach(),
+            "chamfer_distances_tensor": chamfer_distances_tensor,
+            "mean_chamfer_distance": loss_chamfer_distance,
             "final_chamfer_distance": chamfer_distance[
                 self.n_future_steps - 1
-            ].detach(),
-            "loss_range_view": loss_range_view.detach(),
-            "loss_mask": loss_mask.detach(),
+            ],
+            "loss_range_view": loss_range_view,
+            "loss_mask": loss_mask,
         }
         return loss_dict
 
@@ -225,6 +225,8 @@ class semantic_chamfer_distance(nn.Module):
         for s in range(n_future_steps):
             chamfer_distances[s] = 0
             for b in range(batch_size):
+                if len(torch.unique(target[b, 4, s, :, :]))<2:
+                    continue
                 output_points = self.projection.get_valid_points_from_range_view(
                     masked_output[b, s, :, :]
                 ).view(1, -1, 3)
@@ -251,6 +253,8 @@ class semantic_chamfer_distance(nn.Module):
                 target_points = target_points[target[b, 0, s, :, :] > 0.0].view(
                     1, -1, 3
                 )
+                if output_points.shape[1] == 0:
+                    continue
                 # print(output_points.shape)
                 # print(target_points.shape)
                 # quit()

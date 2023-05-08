@@ -45,6 +45,7 @@ if __name__ == "__main__":
         default=None,
         help="Sequence to be tested",
     )
+    parser.add_argument("--label", "-o", type=int, default=None, help="Object Label")
 
     args, unparsed = parser.parse_known_args()
     # load config file
@@ -78,6 +79,7 @@ if __name__ == "__main__":
     else:
         checkpoint_path = "./pcf/runs/" + args.model + "/checkpoints/last.ckpt"
     cfg["TEST"]["USED_CHECKPOINT"] = checkpoint_path
+    cfg["TEST"]["OBJECT_LABEL"] = args.label
 
 
     model = TCNet.load_from_checkpoint(checkpoint_path, cfg=cfg)
@@ -108,7 +110,7 @@ if __name__ == "__main__":
 
     if logger:
         filename = os.path.join(
-            cfg["LOG_DIR"], "test", "results_" + time.strftime("%Y%m%d_%H%M%S") + ".yml"
+            cfg["LOG_DIR"], "test", "results_" +str(cfg["TEST"]["OBJECT_LABEL"]) + "_" + time.strftime("%Y%m%d_%H%M%S") + ".yml"
         )
         log_to_save = {**{"results": results}, **vars(args), **cfg}
         with open(filename, "w") as yaml_file:
