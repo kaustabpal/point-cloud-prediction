@@ -45,19 +45,19 @@ class Loss(nn.Module):
         #target[:, 2, :, :, :] = target[:, 2, :, :, :]*object_mask
         #target[:, 3, :, :, :] = target[:, 3, :, :, :]*object_mask
 
-       foreground_mask = (
-                (semantic_label==51) | (semantic_label==80)\
+        foreground_mask = (
+                (semantic_label==10) | (semantic_label==11)\
+                        | (semantic_label==13) | (semantic_label==15)\
+                        | (semantic_label==18) | (semantic_label==20)\
                         | (semantic_label==30) | (semantic_label==31)\
-                        | (semantic_label==32) | (semantic_label==71)\
-                        | (semantic_label==253)| (semantic_label==254)\
-                        | (semantic_label==255)| (semantic_label==81)\
-                        | (semantic_label==10)| (semantic_label==13)\
-                        | (semantic_label==15)| (semantic_label==18)\
-                        | (semantic_label==20)| (semantic_label==252)\
-                        | (semantic_label==256)| (semantic_label==257)\
+                        | (semantic_label==32) | (semantic_label==51)\
+                        | (semantic_label==71)| (semantic_label==80)\
+                        | (semantic_label==81)| (semantic_label==252)\
+                        | (semantic_label==253)| (semantic_label==234)\
+                        | (semantic_label==255)| (semantic_label==257)\
                         | (semantic_label==258)| (semantic_label==259)\
                     ).type(torch.uint8)
-        background_mask = torch.logical_not(ground_mask)
+        background_mask = torch.logical_not(foreground_mask)
 
         # Range view
         loss_range_view = self.loss_range(output, target_range_image,
@@ -130,7 +130,7 @@ class loss_range(nn.Module):
         self.loss = nn.L1Loss(reduction="mean")
 
     def forward(self, output, target_range_image,
-            foreground_mask, background_mask,, epoch_number):
+            foreground_mask, background_mask, epoch_number):
         
         #object_mask = torch.logical_not(ground_mask)
         gt_masked_output = output["rv"].clone()
@@ -169,7 +169,7 @@ class loss_range(nn.Module):
         # Do not count L1 loss for invalid GT points
         w = 2
         #loss = self.loss(gt_masked_output, target_range_image)
-        loss = self.loss(background_mask*gt_masked_output, background_mask*target_range_image)
+        loss = self.loss(background_mask*gt_masked_output, background_mask*target_range_image)\
                 + w*self.loss(foreground_mask*gt_masked_output, foreground_mask*target_range_image)
         #loss = self.loss(gt_masked_output, target_range_image)
         return loss

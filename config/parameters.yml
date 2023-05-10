@@ -1,5 +1,5 @@
 EXPERIMENT:
-  ID: lion_incremental_learning # Give your experiment a unique ID which is used in the log
+  ID: lion_range_in_sem_loss # Give your experiment a unique ID which is used in the log
 
 DATA_CONFIG:
   DATASET_NAME: KITTIOdometry
@@ -50,7 +50,7 @@ MODEL:
   MASK_THRESHOLD: 0.5 # Threshold for valid point mask classification
   USE:
     XYZ: False # If true: x,y, and z coordinates will be used as additional input channels
-    INTENSITY: False # If true: intensity will be used as additional input channel
+    INTENSITY: True # If true: intensity will be used as additional input channel
   CHANNELS: # Number of channels in encoder and decoder, respectively.
     - 16
     - 32
@@ -74,10 +74,10 @@ MODEL:
   N_CHANNELS_PER_GROUP: 16
 
 TRAIN:
-  LR: 0.0003 #0.001
+  LR: 0.001
   LR_EPOCH: 1
   LR_DECAY: 0.99
-  MAX_EPOCH: 60
+  MAX_EPOCH: 50
   BATCH_SIZE: 8
   BATCH_ACC: 4
   N_GPUS: 4
