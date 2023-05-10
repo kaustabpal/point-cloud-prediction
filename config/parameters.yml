@@ -1,12 +1,12 @@
 EXPERIMENT:
-  ID: range_in_small_obj_mask # Give your experiment a unique ID which is used in the log
+  ID: range_bin_w_loss # Give your experiment a unique ID which is used in the log
 
 DATA_CONFIG:
   DATASET_NAME: KITTIOdometry
   GENERATE_FILES: False # If true, the data will be pre-processed
   COMPUTE_MEAN_AND_STD: False # If true, the mean and std of the training data will be computed to use it in MEAN and STD.
   DATALOADER:
-    NUM_WORKER: 2
+    NUM_WORKER: 1
     SHUFFLE: True
   SPLIT: # Specify the sequences here. We follow the KITTI format.
     TRAIN:
@@ -31,17 +31,17 @@ DATA_CONFIG:
   MAX_RANGE: 85.0 # Average max value in training set
   MIN_RANGE: 1.0 # Average min value in training set
   MEAN: 
-    - 10.839 # Range
-    - 0.005 # X
-    - 0.494 # Y
-    - -1.13 # Z
+    - 8.245 # Range
+    - 26.921 # X
+    - 48.047 # Y
+    - 68.452 # Z
     - 0 #0.287 # Intensity
     
   STD:
-    - 9.314 # Range
-    - 11.521 # X
-    - 8.262 # Y
-    - 0.828 # Z
+    - 3.850 # Range
+    - 5.361 # X
+    - 5.533 # Y
+    - 5.583 # Z
     - 1 #0.14 # Intensity
 
 MODEL:
@@ -49,7 +49,7 @@ MODEL:
   N_FUTURE_STEPS: 5 # Number of predicted future range images
   MASK_THRESHOLD: 0.5 # Threshold for valid point mask classification
   USE:
-    XYZ: False # If true: x,y, and z coordinates will be used as additional input channels
+    XYZ: true # If true: x,y, and z coordinates will be used as additional input channels
     INTENSITY: False # If true: intensity will be used as additional input channel
   CHANNELS: # Number of channels in encoder and decoder, respectively.
     - 16
@@ -78,9 +78,9 @@ TRAIN:
   LR_EPOCH: 1
   LR_DECAY: 0.99
   MAX_EPOCH: 50
-  BATCH_SIZE: 8
+  BATCH_SIZE: 4
   BATCH_ACC: 4
-  N_GPUS: 4
+  N_GPUS: 2
   LOG_EVERY_N_STEPS: 10
   LOSS_WEIGHT_CHAMFER_DISTANCE: 0.0
   LOSS_WEIGHT_RANGE_VIEW: 1.0

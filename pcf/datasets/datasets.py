@@ -207,7 +207,21 @@ class KittiOdometryRaw(Dataset):
 
         for t in range(self.n_past_steps):
             past_data[0, t, :, :] = self.load_range(past_filenames_range[t])
-            past_data[1:4, t, :, :] = self.load_xyz(past_filenames_xyz[t])
+            range_20 = past_data[0, t, :, :]*(past_data[0, t, :, :]<=20.0)
+            past_data[0, t, :, :][range_20 == 0.0] = -1.0
+
+            past_data[1, t, :, :] = self.load_range(past_filenames_range[t])
+            range_20 = past_data[1, t, :, :]*((past_data[1, t, :, :]>20.0) & (past_data[1, t, :, :]<=40.0))
+            past_data[1, t, :, :][range_20 == 0.0] = -1.0
+
+            past_data[2, t, :, :] = self.load_range(past_filenames_range[t])
+            range_20 = past_data[2, t, :, :]*((past_data[2, t, :, :]>40.0) & (past_data[2, t, :, :]<=60.0))
+            past_data[2, t, :, :][range_20 == 0.0] = -1.0
+
+            past_data[3, t, :, :] = self.load_range(past_filenames_range[t])
+            range_20 = past_data[3, t, :, :]*(past_data[3, t, :, :]>60.0)
+            past_data[3, t, :, :][range_20 == 0.0] = -1.0
+            # past_data[1:4, t, :, :] = self.load_xyz(past_filenames_xyz[t])
             past_data[4, t, :, :] = self.load_intensity(past_filenames_intensity[t])
 
         # Load future data
