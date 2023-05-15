@@ -147,27 +147,27 @@ class loss_range(nn.Module):
         range_60 = ((target_range_image>40.0) & (target_range_image<=60.0))
         range_80 = (target_range_image>80.0)
 
-        # loss = self.loss(gt_masked_output, target_range_image)
-        if epoch_number<12:
-            loss = 8*self.loss(range_20*gt_masked_output, range_20*target_range_image)\
-                    + 4*self.loss(range_40*gt_masked_output, range_40*target_range_image)\
-                    + 2*self.loss(range_60*gt_masked_output, range_60*target_range_image)\
-                    + 1*self.loss(range_80*gt_masked_output, range_80*target_range_image)
-        elif ((epoch_number>=12) and (epoch_number<24)):
-            loss = 4*self.loss(range_20*gt_masked_output, range_20*target_range_image)\
-                    + 4*self.loss(range_40*gt_masked_output, range_40*target_range_image)\
-                    + 2*self.loss(range_60*gt_masked_output, range_60*target_range_image)\
-                    + 1*self.loss(range_80*gt_masked_output, range_80*target_range_image)
-        elif (epoch_number>=24 and epoch_number<36):
-            loss = 2*self.loss(range_20*gt_masked_output, range_20*target_range_image)\
-                    + 2*self.loss(range_40*gt_masked_output, range_40*target_range_image)\
-                    + 2*self.loss(range_60*gt_masked_output, range_60*target_range_image)\
-                    + 1*self.loss(range_80*gt_masked_output, range_80*target_range_image)
-        else:
-            loss = 1*self.loss(range_20*gt_masked_output, range_20*target_range_image)\
-                    + 1*self.loss(range_40*gt_masked_output, range_40*target_range_image)\
-                    + 1*self.loss(range_60*gt_masked_output, range_60*target_range_image)\
-                    + 1*self.loss(range_80*gt_masked_output, range_80*target_range_image)
+        loss = self.loss(gt_masked_output, target_range_image)
+        # if epoch_number<12:
+        #     loss = 8*self.loss(range_20*gt_masked_output, range_20*target_range_image)\
+        #             + 4*self.loss(range_40*gt_masked_output, range_40*target_range_image)\
+        #             + 2*self.loss(range_60*gt_masked_output, range_60*target_range_image)\
+        #             + 1*self.loss(range_80*gt_masked_output, range_80*target_range_image)
+        # elif ((epoch_number>=12) and (epoch_number<24)):
+        #     loss = 4*self.loss(range_20*gt_masked_output, range_20*target_range_image)\
+        #             + 4*self.loss(range_40*gt_masked_output, range_40*target_range_image)\
+        #             + 2*self.loss(range_60*gt_masked_output, range_60*target_range_image)\
+        #             + 1*self.loss(range_80*gt_masked_output, range_80*target_range_image)
+        # elif (epoch_number>=24 and epoch_number<36):
+        #     loss = 2*self.loss(range_20*gt_masked_output, range_20*target_range_image)\
+        #             + 2*self.loss(range_40*gt_masked_output, range_40*target_range_image)\
+        #             + 2*self.loss(range_60*gt_masked_output, range_60*target_range_image)\
+        #             + 1*self.loss(range_80*gt_masked_output, range_80*target_range_image)
+        # else:
+        #     loss = 1*self.loss(range_20*gt_masked_output, range_20*target_range_image)\
+        #             + 1*self.loss(range_40*gt_masked_output, range_40*target_range_image)\
+        #             + 1*self.loss(range_60*gt_masked_output, range_60*target_range_image)\
+        #             + 1*self.loss(range_80*gt_masked_output, range_80*target_range_image)
         # loss = self.loss(mask*gt_masked_output, mask*target_range_image)\
         #         + 0*self.loss(object_mask*gt_masked_output, object_mask*target_range_image)
         return loss
