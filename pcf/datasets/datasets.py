@@ -158,11 +158,11 @@ class KittiOdometryRaw(Dataset):
             scan_path_intensity = os.path.join(
                 self.root_dir, seqstr, "processed", "intensity"
             )
-            scan_path_semantic = os.path.join(
-                self.root_dir, seqstr, "processed", "semantic"
-            )
-            self.filenames_semantic[seq] = load_files(scan_path_semantic)
-            assert len(self.filenames_range[seq]) == len(self.filenames_semantic[seq])
+            # scan_path_semantic = os.path.join(
+            #     self.root_dir, seqstr, "processed", "semantic"
+            # )
+            self.filenames_intensity[seq] = load_files(scan_path_intensity)
+            assert len(self.filenames_range[seq]) == len(self.filenames_intensity[seq])
 
             # Get number of sequences based on number of past and future steps
             n_samples_sequence = max(
@@ -203,7 +203,7 @@ class KittiOdometryRaw(Dataset):
         to_idx = scan_idx
         past_filenames_range = self.filenames_range[seq][from_idx : to_idx + 1]
         past_filenames_xyz = self.filenames_xyz[seq][from_idx : to_idx + 1]
-        past_filenames_intensity = self.filenames_semantic[seq][from_idx : to_idx + 1]
+        past_filenames_intensity = self.filenames_intensity[seq][from_idx : to_idx + 1]
 
         for t in range(self.n_past_steps):
             past_data[0, t, :, :] = self.load_range(past_filenames_range[t])
@@ -219,7 +219,7 @@ class KittiOdometryRaw(Dataset):
         to_idx = scan_idx + self.n_future_steps
         fut_filenames_range = self.filenames_range[seq][from_idx : to_idx + 1]
         fut_filenames_xyz = self.filenames_xyz[seq][from_idx : to_idx + 1]
-        fut_filenames_intensity = self.filenames_semantic[seq][from_idx : to_idx + 1]
+        fut_filenames_intensity = self.filenames_intensity[seq][from_idx : to_idx + 1]
 
         for t in range(self.n_future_steps):
             fut_data[0, t, :, :] = self.load_range(fut_filenames_range[t])
@@ -263,19 +263,19 @@ if __name__ == "__main__":
         normalized_image = (image - min) / (max - min)
         return normalized_image
 
-    import matplotlib.pyplot as plt
+    # import matplotlib.pyplot as plt
 
-    fig, axs = plt.subplots(5, 1, sharex=True, figsize=(30, 30 * 5 * 64 / 2048))
+    # fig, axs = plt.subplots(5, 1, sharex=True, figsize=(30, 30 * 5 * 64 / 2048))
 
-    axs[0].imshow(normalize(item["fut_data"][0, 0, :, :].numpy()))
-    axs[0].set_title("Range")
-    axs[1].imshow(normalize(item["fut_data"][1, 0, :, :].numpy()))
-    axs[1].set_title("X")
-    axs[2].imshow(normalize(item["fut_data"][2, 0, :, :].numpy()))
-    axs[2].set_title("Y")
-    axs[3].imshow(normalize(item["fut_data"][3, 0, :, :].numpy()))
-    axs[3].set_title("Z")
-    axs[4].imshow(normalize(item["fut_data"][4, 0, :, :].numpy()))
-    axs[4].set_title("Intensity")
+    # axs[0].imshow(normalize(item["fut_data"][0, 0, :, :].numpy()))
+    # axs[0].set_title("Range")
+    # axs[1].imshow(normalize(item["fut_data"][1, 0, :, :].numpy()))
+    # axs[1].set_title("X")
+    # axs[2].imshow(normalize(item["fut_data"][2, 0, :, :].numpy()))
+    # axs[2].set_title("Y")
+    # axs[3].imshow(normalize(item["fut_data"][3, 0, :, :].numpy()))
+    # axs[3].set_title("Z")
+    # axs[4].imshow(normalize(item["fut_data"][4, 0, :, :].numpy()))
+    # axs[4].set_title("Intensity")
 
-    plt.show()
+    # plt.show()

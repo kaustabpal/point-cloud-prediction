@@ -26,7 +26,7 @@ class Loss(nn.Module):
         self.chamfer_distance = chamfer_distance(self.cfg)
         self.loss_mask = loss_mask(self.cfg)
 
-    def forward(self, output, target, mode, epoch_number=40):
+    def forward(self, output, target, mode):
         """Forward pass with multiple loss components
 
         Args:
@@ -39,29 +39,12 @@ class Loss(nn.Module):
         """
 
         target_range_image = target[:, 0, :, :, :]
-        semantic_label = target[:, 4, :, :, :]
-        #target[:, 0, :, :, :] = target[:, 0, :, :, :]*object_mask
-        #target[:, 1, :, :, :] = target[:, 1, :, :, :]*object_mask
-        #target[:, 2, :, :, :] = target[:, 2, :, :, :]*object_mask
-        #target[:, 3, :, :, :] = target[:, 3, :, :, :]*object_mask
-
-        foreground_mask = (
-                (semantic_label==10) | (semantic_label==11)\
-                        | (semantic_label==13) | (semantic_label==15)\
-                        | (semantic_label==18) | (semantic_label==20)\
-                        | (semantic_label==30) | (semantic_label==31)\
-                        | (semantic_label==32) | (semantic_label==51)\
-                        | (semantic_label==71)| (semantic_label==80)\
-                        | (semantic_label==81)| (semantic_label==252)\
-                        | (semantic_label==253)| (semantic_label==234)\
-                        | (semantic_label==255)| (semantic_label==257)\
-                        | (semantic_label==258)| (semantic_label==259)\
-                    ).type(torch.uint8)
-        background_mask = torch.logical_not(foreground_mask)
 
         # Range view
-        loss_range_view = self.loss_range(output, target_range_image,
-                foreground_mask, background_mask, epoch_number)
+        loss_range_view = self.loss_range(output, target_range_image)
+
+        # Mask
+        loss_mask = self.loss_mask(output, target_range_image)
 
         # Mask
         loss_mask = self.loss_mask(output, target_range_image)
@@ -129,49 +112,12 @@ class loss_range(nn.Module):
         self.cfg = cfg
         self.loss = nn.L1Loss(reduction="mean")
 
-    def forward(self, output, target_range_image,
-            foreground_mask, background_mask, epoch_number):
-        
-        #object_mask = torch.logical_not(ground_mask)
+    def forward(self, output, target_range_image):
+        # Do not count L1 loss for invalid GT points
         gt_masked_output = output["rv"].clone()
         gt_masked_output[target_range_image == -1.0] = -1.0
 
-        #if(epoch_number>=0 and epoch_number<10):
-        #    mask = (
-        #            (semantic_label==51) | (semantic_label==80)\
-        #                    | (semantic_label==30) | (semantic_label==31)\
-        #                    | (semantic_label==32) | (semantic_label==71)\
-        #                    | (semantic_label==253)| (semantic_label==254)\
-        #                    | (semantic_label==255)| (semantic_label==81)\
-        #                    | (semantic_label==11)| (semantic_label==15)\
-        #            ).type(torch.uint8)
-        #    loss = self.loss(mask*gt_masked_output, mask*target_range_image)
-
-        #elif(epoch_number>=10 and epoch_number<20):
-        #    mask = (
-        #            (semantic_label==51) | (semantic_label==80)\
-        #                    | (semantic_label==30) | (semantic_label==31)\
-        #                    | (semantic_label==32) | (semantic_label==71)\
-        #                    | (semantic_label==253)| (semantic_label==254)\
-        #                    | (semantic_label==255)| (semantic_label==81)\
-        #                    | (semantic_label==10)| (semantic_label==13)\
-        #                    | (semantic_label==16)| (semantic_label==18)\
-        #                    | (semantic_label==20)| (semantic_label==252)\
-        #                    | (semantic_label==256)| (semantic_label==257)\
-        #                    | (semantic_label==258)| (semantic_label==259)\
-        #            ).type(torch.uint8)
-        #    loss = self.loss(mask*gt_masked_output, mask*target_range_image)
-        #elif(epoch_number>=20):
-        #    loss = self.loss(gt_masked_output, target_range_image)
-
-        #elif(epoch_number>=25 and epoch_number<50):
-        #    w = 2
-        # Do not count L1 loss for invalid GT points
-        w = 2
-        #loss = self.loss(gt_masked_output, target_range_image)
-        loss = self.loss(background_mask*gt_masked_output, background_mask*target_range_image)\
-                + w*self.loss(foreground_mask*gt_masked_output, foreground_mask*target_range_image)
-        #loss = self.loss(gt_masked_output, target_range_image)
+        loss = self.loss(gt_masked_output, target_range_image)
         return loss
 
 

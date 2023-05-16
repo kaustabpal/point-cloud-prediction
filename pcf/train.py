@@ -12,7 +12,7 @@ from pytorch_lightning.strategies.ddp import DDPStrategy
 import subprocess
 
 from pcf.datasets.datasets import KittiOdometryModule
-from pcf.models.TCNet import TCNet
+from pcf.models.SPFNet import SPFNet
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("./train.py")
@@ -99,7 +99,7 @@ if __name__ == "__main__":
     else:
         ###### Create new log
         resume_from_checkpoint = None
-        config_filename = "config/parameters.yml"
+        config_filename = "config/parameters_lstm.yml"
         cfg = yaml.safe_load(open(config_filename))
         cfg["GIT_COMMIT_VERSION"] = str(
             subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
@@ -125,7 +125,7 @@ if __name__ == "__main__":
     print("data setup done")
 
     ###### Model
-    model = TCNet(cfg)
+    model = SPFNet(cfg)
 
     ###### Load checkpoint
     if args.resume:
@@ -162,7 +162,7 @@ if __name__ == "__main__":
         default_root_dir='log',
         strategy = DDPStrategy(find_unused_parameters=False),
         #precision=16,
-        check_val_every_n_epoch=5,
+        check_val_every_n_epoch=3,
         limit_train_batches=1.0,
         limit_val_batches=1.0,
         limit_test_batches=1.0
@@ -171,21 +171,21 @@ if __name__ == "__main__":
     ###### Training
     trainer.fit(model, data)
     
-    ###### Testing
-    logger = TensorBoardLogger(
-        save_dir=cfg["LOG_DIR"], default_hp_metric=False, name="test", version=""
-    )
-    checkpoint_path = cfg["LOG_DIR"] + "/checkpoints/min_val_loss.ckpt"
-    model = TCNet.load_from_checkpoint(checkpoint_path, cfg=cfg)
-    results = trainer.test(model, data.test_dataloader())
+    # ###### Testing
+    # logger = TensorBoardLogger(
+    #     save_dir=cfg["LOG_DIR"], default_hp_metric=False, name="test", version=""
+    # )
+    # checkpoint_path = cfg["LOG_DIR"] + "/checkpoints/min_val_loss.ckpt"
+    # model = TCNet.load_from_checkpoint(checkpoint_path, cfg=cfg)
+    # results = trainer.test(model, data.test_dataloader())
 
-    if logger:
-        filename = os.path.join(
-            cfg["LOG_DIR"], "test", "results_" + time.strftime("%Y%m%d_%H%M%S") + ".yml"
-        )
-        log_to_save = {**{"results": results}, **vars(args), **cfg}
-        with open(filename, "w") as yaml_file:
-            yaml.dump(log_to_save, yaml_file, default_flow_style=False)
+    # if logger:
+    #     filename = os.path.join(
+    #         cfg["LOG_DIR"], "test", "results_" + time.strftime("%Y%m%d_%H%M%S") + ".yml"
+    #     )
+    #     log_to_save = {**{"results": results}, **vars(args), **cfg}
+    #     with open(filename, "w") as yaml_file:
+    #         yaml.dump(log_to_save, yaml_file, default_flow_style=False)
 
 
 

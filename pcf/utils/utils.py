@@ -111,7 +111,10 @@ def range_projection(
     proj_y = np.maximum(0, proj_y).astype(np.int32)  # in [0,H-1]
 
     # order in decreasing depth
-    order = np.argsort(depth)[::-1]
+    # order = np.argsort(depth)[::-1]
+
+    # order in increasing depth
+    order = np.argsort(depth)
     depth = depth[order]
     intensity = intensity[order]
     proj_y = proj_y[order]
