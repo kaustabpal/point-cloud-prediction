@@ -99,7 +99,7 @@ if __name__ == "__main__":
     else:
         ###### Create new log
         resume_from_checkpoint = None
-        config_filename = "config/parameters_lstm.yml"
+        config_filename = "config/parameters_spfnet.yml"
         cfg = yaml.safe_load(open(config_filename))
         cfg["GIT_COMMIT_VERSION"] = str(
             subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
