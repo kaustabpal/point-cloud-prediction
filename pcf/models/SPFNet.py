@@ -43,9 +43,9 @@ class SPFNet(BasePredictionModel):
         self.feature_conv_down = nn.Conv2d(
                             self.channels[-1],
                             self.feature_vector,
-                            kernel_size=(self.kernel_size[-1], 4),
-                            stride=(self.stride[-1], 4),
-                            padding=(1,1),
+                            kernel_size=(2, 4),
+                            stride=(1, 1),
+                            padding=(0, 0),
                             bias=True,
                             )
         
@@ -59,9 +59,9 @@ class SPFNet(BasePredictionModel):
         self.feature_conv_up = nn.ConvTranspose2d(
                             self.feature_vector,
                             self.channels[-1],
-                            kernel_size=(self.kernel_size[-1], 6),
-                            stride=(self.stride[-1], 4),
-                            padding=(1,1),
+                            kernel_size=(2, 4),
+                            stride=(1, 1),
+                            padding=(0, 0),
                             bias=True,
                             )
 
@@ -125,15 +125,15 @@ class SPFNet(BasePredictionModel):
         
         x_lstm, decoder_hidden = self.lstm_layer(features)
 
-        x = self.feature_conv_up(x_lstm[:, 0, :].view(batch_size, self.feature_vector, 1, 1))
+        x = self.feature_conv_up(x_lstm[:, -1, :].view(batch_size, self.feature_vector, 1, 1))
         for layer in self.UpLayers:
             x = layer(x)
         x = self.output_layer(x)
         y[:, :, 0, :, :] = x
 
         for i in range(1, self.n_future_steps):
-            x_lstm, decoder_hidden = self.lstm_layer(x_lstm, decoder_hidden)
-            x = self.feature_conv_up(x_lstm[:, i, :].view(batch_size, self.feature_vector, 1, 1))
+            x_lstm, decoder_hidden = self.lstm_layer(x_lstm[:, -1, :].view(batch_size, 1, self.feature_vector), decoder_hidden)
+            x = self.feature_conv_up(x_lstm.view(batch_size, self.feature_vector, 1, 1))
             for layer in self.UpLayers:
                 x = layer(x)
             x = self.output_layer(x)

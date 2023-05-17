@@ -249,7 +249,7 @@ class KittiOdometryRaw(Dataset):
 
 
 if __name__ == "__main__":
-    config_filename = "./config/parameters.yml"
+    config_filename = "./config/parameters_spfnet.yml"
     cfg = yaml.safe_load(open(config_filename))
     data = KittiOdometryModule(cfg)
     data.prepare_data()

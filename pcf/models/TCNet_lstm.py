@@ -8,79 +8,79 @@ import yaml
 
 from pcf.models.base_lstm import BasePredictionModel
 
-class TCNet(BasePredictionModel):
+class TCNet_lstm(BasePredictionModel):
     def __init__(self, cfg):
         """Init all layers needed for range image-based point cloud prediction"""
         print("Import done")
         super().__init__(cfg)
         self.channels = self.cfg["MODEL"]["CHANNELS"]
-        self.skip_if_channel_size = self.cfg["MODEL"]["SKIP_IF_CHANNEL_SIZE"]
-        self.temporal_kernel_size = self.cfg["MODEL"]["TEMPORAL_KERNEL_SIZE"]
         self.circular_padding = self.cfg["MODEL"]["CIRCULAR_PADDING"]
+        self.feature_vector = self.cfg["MODEL"]["FEATURE_VECTOR"]
 
         self.input_layer = nn.Conv2d(
-            in_channels=self.n_inputs,
-            out_channels=self.channels[0],
-            kernel_size=(self.kernel_size[0], 4),
-            stride=(self.stride[0], 2),
-            padding=(1,1),
-            bias=True
+            self.n_inputs,
+            self.channels[0],
+            kernel_size=(1, 1),
+            stride=(1, 1),
+            padding=(0, 0),
+            bias=True,
+            padding_mode='circular',
         )
 
         self.DownLayers = nn.ModuleList()
         for i in range(len(self.channels) - 1):
-            if self.channels[i + 1] in self.skip_if_channel_size:
-                self.DownLayers.append(
-                    DownBlock(
-                        self.cfg,
-                        self.channels[i],
-                        self.channels[i + 1],
-                        self.temporal_kernel_size[i],
-                        skip=True,
-                    )
+            self.DownLayers.append(
+                DownBlock(
+                    self.cfg,
+                    self.channels[i],
+                    self.channels[i + 1],
                 )
-            else:
-                self.DownLayers.append(
-                    DownBlock(
-                        self.cfg,
-                        self.channels[i],
-                        self.channels[i + 1],
-                        self.temporal_kernel_size[i],
-                        skip=False,
-                    )
-                )
+            )
+        
+        self.feature_conv_down = nn.Conv2d(
+                            self.channels[-1],
+                            self.feature_vector,
+                            kernel_size=(2, 2),
+                            stride=(1, 1),
+                            padding=(0, 0),
+                            bias=True,
+                            )
+        
+        self.lstm_layer = nn.LSTM(
+                                input_size=self.feature_vector,
+                                hidden_size=self.feature_vector,
+                                num_layers=2,
+                                batch_first=True
+                                )
+
+        self.feature_conv_up = nn.ConvTranspose2d(
+                            self.feature_vector,
+                            self.channels[-1],
+                            kernel_size=(2, 2),
+                            stride=(1, 1),
+                            padding=(0, 0),
+                            bias=True,
+                            )
 
         self.UpLayers = nn.ModuleList()
         for i in reversed(range(len(self.channels) - 1)):
-            if self.channels[i + 1] in self.skip_if_channel_size:
-                self.UpLayers.append(
-                    UpBlock(
-                        self.cfg,
-                        self.channels[i + 1],
-                        self.channels[i],
-                        self.temporal_kernel_size[i],
-                        skip=True,
-                    )
+            self.UpLayers.append(
+                UpBlock(
+                    self.cfg,
+                    self.channels[i + 1],
+                    self.channels[i],
                 )
-            else:
-                self.UpLayers.append(
-                    UpBlock(
-                        self.cfg,
-                        self.channels[i + 1],
-                        self.channels[i],
-                        self.temporal_kernel_size[i],
-                        skip=False,
-                    )
-                )
+            )
 
         self.n_outputs = 2
-        self.output_layer = CustomConv3d(
+        self.output_layer = nn.Conv2d(
             self.channels[0],
             self.n_outputs,
-            kernel_size=(1, 1, 1),
-            stride=(1, 1, 1),
+            kernel_size=(1, 1),
+            stride=(1, 1),
+            padding=(0, 0),
             bias=True,
-            circular_padding=self.circular_padding,
+            padding_mode='circular',
         )
 
     def forward(self, x):
@@ -107,27 +107,40 @@ class TCNet(BasePredictionModel):
         x = torch.true_divide(x - mean, std)
         x = x * past_mask
 
-        skip_list = []
-        x = x.view(batch_size, n_inputs, n_past_steps, H, W)
-        x = self.input_layer(x)
-        for layer in self.DownLayers:
-            x = layer(x)
-            if layer.skip:
-                skip_list.append(x.clone())
+        features = torch.zeros((batch_size, n_past_steps, self.feature_vector)).to(self.device)
+        y = torch.zeros((batch_size, self.n_outputs, n_past_steps, H, W)).to(self.device)
 
-        for layer in self.UpLayers:
-            if layer.skip:
-                x = layer(x, skip_list.pop())
-            else:
+        x_in = x.view(batch_size, n_inputs, n_past_steps, H, W)
+        for i in range(n_past_steps):
+            x = x_in[:, :, i, :, :]
+            x = self.input_layer(x)
+            for layer in self.DownLayers:
                 x = layer(x)
+            x = self.feature_conv_down(x)
+            features[:, i, :] = x.view(batch_size, self.feature_vector)
+        
+        x_lstm, decoder_hidden = self.lstm_layer(features)
 
+        x = self.feature_conv_up(x_lstm[:, -1, :].view(batch_size, self.feature_vector, 1, 1))
+        for layer in self.UpLayers:
+            x = layer(x)
         x = self.output_layer(x)
+        y[:, :, 0, :, :] = x
+
+        for i in range(1, self.n_future_steps):
+            x_lstm, decoder_hidden = self.lstm_layer(x_lstm[:, -1, :].view(batch_size, 1, self.feature_vector), decoder_hidden)
+            x = self.feature_conv_up(x_lstm.view(batch_size, self.feature_vector, 1, 1))
+            for layer in self.UpLayers:
+                x = layer(x)
+            x = self.output_layer(x)
+            y[:, :, i, :, :] = x
 
         output = {}
-        output["rv"] = self.min_range + nn.Sigmoid()(x[:, 0, :, :, :]) * (
+        output["rv"] = self.min_range + nn.Sigmoid()(y[:, 0, :, :, :]) * (
             self.max_range - self.min_range
         )
-        output["mask_logits"] = x[:, 1, :, :, :]
+        # output["rv"] = y[:, 0, :, :, :]
+        output["mask_logits"] = y[:, 1, :, :, :]
 
         return output
 
@@ -143,7 +156,7 @@ class Normalization(nn.Module):
         n_channels_per_group = self.cfg["MODEL"]["N_CHANNELS_PER_GROUP"]
 
         if self.norm_type == "batch":
-            self.norm = nn.BatchNorm3d(n_channels)
+            self.norm = nn.BatchNorm2d(n_channels)
         elif self.norm_type == "group":
             self.norm = nn.GroupNorm(n_channels // n_channels_per_group, n_channels)
         elif self.norm_type == "instance":
@@ -168,30 +181,29 @@ class DownBlock(nn.Module):
     """Downsamples the input tensor"""
 
     def __init__(
-        self, cfg, in_channels, out_channels, temporal_kernel_size, skip=False
+        self, cfg, in_channels, out_channels
     ):
         """Init module"""
         super(DownBlock, self).__init__()
-        self.skip = skip
         self.circular_padding = cfg["MODEL"]["CIRCULAR_PADDING"]
-        self.conv0 = CustomConv3d(
+        self.conv0 = nn.Conv2d(
             in_channels,
             in_channels,
-            kernel_size=(3, 3, 3),
-            stride=(1, 1, 1),
-            padding=(1, 1, 1),
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
             bias=False,
-            circular_padding=self.circular_padding,
+            padding_mode='circular',
         )
         self.norm0 = Normalization(cfg, in_channels)
         self.relu = nn.LeakyReLU()
-        self.conv1 = CustomConv3d(
+        self.conv1 = nn.Conv2d(
             in_channels,
             out_channels,
-            kernel_size=(temporal_kernel_size, 2, 4),
-            stride=(1, 2, 4),
+            kernel_size=(2, 4),
+            stride=(2, 4),
             bias=False,
-            circular_padding=self.circular_padding,
+            padding_mode='circular',
         )
         self.norm1 = Normalization(cfg, out_channels)
 
@@ -217,44 +229,32 @@ class UpBlock(nn.Module):
     """Upsamples the input tensor using transposed convolutions"""
 
     def __init__(
-        self, cfg, in_channels, out_channels, temporal_kernel_size, skip=False
+        self, cfg, in_channels, out_channels
     ):
         """Init module"""
         super(UpBlock, self).__init__()
-        self.skip = skip
         self.circular_padding = cfg["MODEL"]["CIRCULAR_PADDING"]
-        if self.skip:
-            self.conv_skip = CustomConv3d(
-                2 * in_channels,
-                in_channels,
-                kernel_size=(3, 3, 3),
-                stride=(1, 1, 1),
-                padding=(1, 1, 1),
-                bias=False,
-                circular_padding=self.circular_padding,
-            )
-            self.norm_skip = Normalization(cfg, in_channels)
-        self.conv0 = nn.ConvTranspose3d(
+        self.conv0 = nn.ConvTranspose2d(
             in_channels,
             in_channels,
-            kernel_size=(temporal_kernel_size, 2, 4),
-            stride=(1, 2, 4),
+            kernel_size=(2, 4),
+            stride=(2, 4),
             bias=False,
         )
         self.norm0 = Normalization(cfg, in_channels)
         self.relu = nn.LeakyReLU()
-        self.conv1 = CustomConv3d(
+        self.conv1 = nn.Conv2d(
             in_channels,
             out_channels,
-            kernel_size=(3, 3, 3),
-            stride=(1, 1, 1),
-            padding=(1, 1, 1),
+            kernel_size=(3, 3),
+            stride=(1, 1),
+            padding=(1, 1),
             bias=False,
-            circular_padding=self.circular_padding,
+            padding_mode='circular',
         )
         self.norm1 = Normalization(cfg, out_channels)
 
-    def forward(self, x, skip=None):
+    def forward(self, x):
         """Forward pass for upsampling
 
         Args:
@@ -264,11 +264,6 @@ class UpBlock(nn.Module):
         Returns:
             torch.tensor: Upsampled output tensor
         """
-        if self.skip:
-            x = torch.cat((x, skip), dim=1)
-            x = self.conv_skip(x)
-            x = self.norm_skip(x)
-            x = self.relu(x)
         x = self.conv0(x)
         x = self.norm0(x)
         x = self.relu(x)
