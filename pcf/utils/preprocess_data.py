@@ -23,12 +23,13 @@ def prepare_data(cfg):
     for seq in sequences:
         seqstr = "{0:02d}".format(int(seq))
         scan_folder = os.path.join(os.environ.get("PCF_DATA_RAW"), seqstr, "velodyne")
+        print(scan_folder)
         dst_folder = os.path.join(
             os.environ.get("PCF_DATA_PROCESSED"), seqstr, "processed"
         )
         if not os.path.exists(dst_folder):
             os.makedirs(dst_folder)
-
+        print(dst_folder)
         # Load LiDAR scan files
         scan_paths = load_files(scan_folder)
 
