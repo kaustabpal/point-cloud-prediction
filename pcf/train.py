@@ -153,7 +153,7 @@ if __name__ == "__main__":
     trainer = Trainer(
         accelerator="gpu",
         devices=cfg["TRAIN"]["N_GPUS"],
-        num_nodes=1,
+        #num_nodes=1,
         logger=tb_logger,
         accumulate_grad_batches=cfg["TRAIN"]["BATCH_ACC"], # times accumulate_grad_batches
         max_epochs=cfg["TRAIN"]["MAX_EPOCH"],
