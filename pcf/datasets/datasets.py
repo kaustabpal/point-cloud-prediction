@@ -78,8 +78,6 @@ class KittiOdometryModule(LightningDataModule):
             timeout=0,
             persistent_workers=True
         )
-        # print(self.cfg["TRAIN"]["BATCH_SIZE"])
-        # quit()
         self.test_iter = iter(self.test_loader)
 
         # Optionally compute statistics of training data
@@ -244,8 +242,20 @@ class KittiOdometryRaw(Dataset):
     def load_intensity(self, filename):
         """Load .npy intensity values as (1,height,width) tensor"""
         semantic_np = np.load(filename)
-        intensity = torch.Tensor(semantic_np)
-        return intensity
+        semantic_label = torch.Tensor(semantic_np)
+        foreground_mask = (
+                (semantic_label==10) | (semantic_label==11)\
+                        | (semantic_label==13) | (semantic_label==15)\
+                        | (semantic_label==18) | (semantic_label==20)\
+                        | (semantic_label==30) | (semantic_label==31)\
+                        | (semantic_label==32) | (semantic_label==51)\
+                        | (semantic_label==71)| (semantic_label==80)\
+                        | (semantic_label==81)| (semantic_label==252)\
+                        | (semantic_label==253)| (semantic_label==234)\
+                        | (semantic_label==255)| (semantic_label==257)\
+                        | (semantic_label==258)| (semantic_label==259)\
+                    ).type(torch.uint8)
+        return foreground_mask
 
 
 if __name__ == "__main__":
