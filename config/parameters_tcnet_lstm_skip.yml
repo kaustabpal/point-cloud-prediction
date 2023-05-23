@@ -1,5 +1,5 @@
 EXPERIMENT:
-  ID: tcnet_lstm # Give your experiment a unique ID which is used in the log
+  ID: tcnet_lstm_skip # Give your experiment a unique ID which is used in the log
 
 DATA_CONFIG:
   DATASET_NAME: KITTIOdometry
