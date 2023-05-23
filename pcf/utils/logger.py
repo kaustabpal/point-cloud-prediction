@@ -210,7 +210,7 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
         max_range - min_range
     )
 
-    for s in range(5, n_past_steps + n_future_steps):
+    for s in range(n_past_steps, n_past_steps + n_future_steps):
         step = "{0:02d}".format(s)
 
         # Save rv and mask predictions
@@ -260,8 +260,8 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
             verticalalignment="top",
             bbox=props,
         )
-        objects_gt = future_object_mask[s-5, :, :]*concat_gt_rv_normalized[s, :, :]*255
-        objects_pred = future_object_mask[s-5, :, :]*concat_combined_pred_rv_normalized[s, :, :]*255
+        objects_gt = future_object_mask[s-n_past_steps, :, :]*concat_gt_rv_normalized[s, :, :]*255
+        objects_pred = future_object_mask[s-n_past_steps, :, :]*concat_combined_pred_rv_normalized[s, :, :]*255
         objects_range_loss = np.abs(
                 objects_gt.cpu().detach().numpy()
                 - objects_pred.cpu().detach().numpy())

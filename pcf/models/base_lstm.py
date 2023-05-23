@@ -55,20 +55,39 @@ class BasePredictionModel(LightningModule):
     def forward(self, x):
         pass
 
+    # def configure_optimizers(self):
+    #     """Optimizers"""
+    #     optimizer = torch.optim.Adam(self.parameters(), lr=self.cfg["TRAIN"]["LR"], betas=(self.cfg["TRAIN"]["BETA1"], self.cfg["TRAIN"]["BETA2"]))
+    #     #optimizer = Lion(self.parameters(), lr=self.cfg["TRAIN"]["LR"], weight_decay=1e-2)
+    #     # scheduler = torch.optim.lr_scheduler.StepLR(
+    #     #     optimizer,
+    #     #     step_size=self.cfg["TRAIN"]["LR_EPOCH"],
+    #     #     gamma=self.cfg["TRAIN"]["LR_DECAY"],
+    #     # )
+    #     #scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer,
+    #     #                        T_max = 10000, # Maximum number of iterations.
+    #     #                        eta_min = 1e-6, verbose=False)
+    #     # return [optimizer], [scheduler]
+    #     return [optimizer]
+    #     #return {
+    #     #        'optimizer': optimizer,
+    #     #        'lr_scheduler': scheduler,
+    #     #        'monitor': 'val/loss'
+    #     #    }
+
     def configure_optimizers(self):
         """Optimizers"""
-        optimizer = torch.optim.Adam(self.parameters(), lr=self.cfg["TRAIN"]["LR"], betas=(self.cfg["TRAIN"]["BETA1"], self.cfg["TRAIN"]["BETA2"]))
+        optimizer = torch.optim.Adam(self.parameters(), lr=self.cfg["TRAIN"]["LR"])
         #optimizer = Lion(self.parameters(), lr=self.cfg["TRAIN"]["LR"], weight_decay=1e-2)
-        # scheduler = torch.optim.lr_scheduler.StepLR(
-        #     optimizer,
-        #     step_size=self.cfg["TRAIN"]["LR_EPOCH"],
-        #     gamma=self.cfg["TRAIN"]["LR_DECAY"],
-        # )
+        scheduler = torch.optim.lr_scheduler.StepLR(
+            optimizer,
+            step_size=self.cfg["TRAIN"]["LR_EPOCH"],
+            gamma=self.cfg["TRAIN"]["LR_DECAY"],
+        )
         #scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer,
         #                        T_max = 10000, # Maximum number of iterations.
         #                        eta_min = 1e-6, verbose=False)
-        # return [optimizer], [scheduler]
-        return [optimizer]
+        return [optimizer], [scheduler]
         #return {
         #        'optimizer': optimizer,
         #        'lr_scheduler': scheduler,

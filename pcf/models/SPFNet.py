@@ -197,7 +197,7 @@ class DownBlock(nn.Module):
             kernel_size=(kernel_size, 4),
             stride=(stride, 2),
             padding=(1,1),
-            bias=True,
+            bias=False,
         )
 
     def forward(self, x):
@@ -231,7 +231,7 @@ class UpBlock(nn.Module):
             kernel_size=(kernel_size, 4),
             stride=(stride, 2),
             padding=(1, 1),
-            bias=True,
+            bias=False,
         )
 
     def forward(self, x, skip=None):
