@@ -114,7 +114,7 @@ if __name__ == "__main__":
         cfg["LOG_DIR"] = os.path.join(
             "./pcf/runs", cfg["GIT_COMMIT_VERSION"], cfg["LOG_NAME"]
         )
-        if not os.path.exists(cfg["LOG_DIR"]):
+        if not os.path.isdir(cfg["LOG_DIR"]):
             os.makedirs(cfg["LOG_DIR"])
         print("Starting experiment with log name", cfg["LOG_NAME"])
 
