@@ -226,7 +226,6 @@ class TCNet_lstm_skip(BasePredictionModel):
             self.max_range - self.min_range
         )
         output["mask_logits"] = x[:, :, 1, :, :]
-        quit()
 
         return output
 
