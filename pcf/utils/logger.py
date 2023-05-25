@@ -160,7 +160,9 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
         frame (int): Selected frame number
     """
     #cmap = cmocean.cm.thermal
-    cmap = mpl.colormaps["turbo"]
+    cmap = mpl.colormaps["turbo_r"]
+    norm = mpl.colors.Normalize(vmin=1, vmax=85, clip=False)
+    cmap.set_under('k')
     _, _, n_past_steps, H, W = batch["past_data"].shape
     _, _, n_future_steps, _, _ = batch["fut_data"].shape
 
@@ -192,12 +194,12 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
 
     # Get normalized range views
     concat_gt_rv = torch.cat((past_range, future_range), 0)
-    concat_gt_rv_normalized = (concat_gt_rv - min_range) / (max_range - min_range)
+    concat_gt_rv_normalized = concat_gt_rv#(concat_gt_rv - min_range) / (max_range - min_range)
 
     concat_pred_rv = torch.cat(
         (torch.zeros(past_range.shape).type_as(past_range), pred_rv), 0
     )
-    concat_pred_rv_normalized = (concat_pred_rv - min_range) / (max_range - min_range)
+    concat_pred_rv_normalized = concat_pred_rv#(concat_pred_rv - min_range) / (max_range - min_range)
 
     # Combine mask and rv predition
     masked_prediction = projection.get_masked_range_view(output)[
@@ -206,9 +208,9 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
     concat_combined_pred_rv = torch.cat(
         (torch.zeros(past_range.shape).type_as(past_range), masked_prediction), 0
     )
-    concat_combined_pred_rv_normalized = (concat_combined_pred_rv - min_range) / (
-        max_range - min_range
-    )
+    concat_combined_pred_rv_normalized = concat_combined_pred_rv#(concat_combined_pred_rv - min_range) / (
+        #max_range - min_range
+    #
 
     for s in range(n_past_steps, n_past_steps + n_future_steps):
         step = "{0:02d}".format(s)
@@ -223,7 +225,7 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
         ratio = 5 * H / W
         props = dict(boxstyle="round", facecolor="wheat", alpha=0.5)
         fig, axs = plt.subplots(6, 1, sharex=True, figsize=(30, 30 * ratio))
-        axs[0].imshow(concat_gt_rv_normalized[s, :, :].cpu().detach().numpy(), cmap=cmap)
+        axs[0].imshow(concat_gt_rv_normalized[s, :, :].cpu().detach().numpy(), cmap=cmap, norm=norm)
         axs[0].text(
             0.01,
             0.8,
@@ -235,7 +237,7 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
         )
 
         axs[1].imshow(
-            concat_combined_pred_rv_normalized[s, :, :].cpu().detach().numpy(), cmap=cmap
+            concat_combined_pred_rv_normalized[s, :, :].cpu().detach().numpy(), cmap=cmap, norm=norm
         )
         axs[1].text(
             0.01,
@@ -249,7 +251,7 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
         axs[2].imshow(
             np.abs(
                 concat_combined_pred_rv_normalized[s, :, :].cpu().detach().numpy()
-                - concat_gt_rv_normalized[s, :, :].cpu().detach().numpy()), cmap=cmap
+                - concat_gt_rv_normalized[s, :, :].cpu().detach().numpy()), cmap=cmap, norm=norm
         )
         axs[2].text(
             0.01,
@@ -266,7 +268,7 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
                 objects_gt.cpu().detach().numpy()
                 - objects_pred.cpu().detach().numpy())
 
-        axs[3].imshow(objects_gt.cpu().detach().numpy(), cmap=cmap)
+        axs[3].imshow(objects_gt.cpu().detach().numpy(), cmap=cmap, norm=norm)
         axs[3].text(
             0.01,
             0.8,
@@ -277,7 +279,7 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
             bbox=props,
         )
 
-        axs[4].imshow(objects_pred.cpu().detach().numpy(), cmap=cmap)
+        axs[4].imshow(objects_pred.cpu().detach().numpy(), cmap=cmap, norm=norm)
         axs[4].text(
             0.01,
             0.8,
@@ -288,7 +290,7 @@ def save_range_and_mask(cfg, projection, batch, output, sample_index, sequence, 
             bbox=props,
         )
 
-        axs[5].imshow(objects_range_loss, cmap=cmap)
+        axs[5].imshow(objects_range_loss, cmap=cmap, norm=norm)
         axs[5].text(
             0.01,
             0.8,

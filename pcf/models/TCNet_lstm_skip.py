@@ -109,8 +109,15 @@ class TCNet_lstm_skip(BasePredictionModel):
                             padding=(0, 0),
                             bias=True,
                             )
+
+        self.lstm_layer_encoder = nn.LSTM(
+                                input_size=self.feature_vector,
+                                hidden_size=self.feature_vector,
+                                num_layers=2,
+                                batch_first=True
+                                )
         
-        self.lstm_layer = nn.LSTM(
+        self.lstm_layer_decoder = nn.LSTM(
                                 input_size=self.feature_vector,
                                 hidden_size=self.feature_vector,
                                 num_layers=2,
@@ -183,49 +190,43 @@ class TCNet_lstm_skip(BasePredictionModel):
 
         skip_list = []
 
-        features = torch.zeros((batch_size, n_past_steps, self.feature_vector)).to(self.device)
-        y_rv = torch.zeros((batch_size, self.n_future_steps, H, W)).to(self.device)
-        y_mask = torch.zeros((batch_size, self.n_future_steps, H, W)).to(self.device)
+        # features = torch.zeros((batch_size, n_past_steps, self.feature_vector)).to(self.device)
+        # y_rv = torch.zeros((batch_size, self.n_future_steps, H, W)).to(self.device)
+        # y_mask = torch.zeros((batch_size, self.n_future_steps, H, W)).to(self.device)
 
-        x_in = x.view(batch_size, n_inputs, n_past_steps, H, W)
+        decoder_input = torch.zeros((batch_size, self.n_future_steps, self.feature_vector)).to(self.device)
 
-        for i in range(n_past_steps):
-            x = x_in[:, :, i, :, :]
-            x = self.input_layer(x)
-            for layer in self.DownLayers:
-                x = layer(x)
-                if layer.skip:
-                    skip_list.append(x.clone())
-            x = self.feature_conv_down(x)
-            features[:, i, :] = x.view(batch_size, self.feature_vector)
+        x = x.view(batch_size*n_past_steps, n_inputs, H, W)
+        x = self.input_layer(x)
+        for layer in self.DownLayers:
+            x = layer(x)
+            if layer.skip:
+                skip_list.append(x.clone())
+        x = self.feature_conv_down(x)
         
-        x_lstm, decoder_hidden = self.lstm_layer(features)
+        x = x.view(batch_size, n_past_steps, self.feature_vector)
 
-        x = self.feature_conv_up(x_lstm[:, -1, :].view(batch_size, self.feature_vector, 1, 1))
+        x, h_c = self.lstm_layer_encoder(x)
+
+        for i in range(self.n_future_steps):
+            x, h_c = self.lstm_layer_decoder(x[:, -1, :].view(batch_size, 1, self.feature_vector), h_c)
+            decoder_input[:, i, :] = x[:, -1, :]
+        
+        x = decoder_input.view(batch_size*self.n_future_steps, self.feature_vector, 1, 1)
+        x = self.feature_conv_up(x)
         for layer in self.UpLayers:
             if layer.skip:
                 x = layer(x, skip_list.pop())
             else:
                 x = layer(x)
-        x = self.output_layer(x)
-        y_rv[:, 0, :, :] = self.min_range + nn.Sigmoid()(x[:, 0, :, :]) * (self.max_range - self.min_range)
-        y_mask[:, 0, :, :] = x[:, 1, :, :]
-
-        for i in range(1, self.n_future_steps):
-            x_lstm, decoder_hidden = self.lstm_layer(x_lstm[:, -1, :].view(batch_size, 1, self.feature_vector), decoder_hidden)
-            x = self.feature_conv_up(x_lstm[:, -1, :].view(batch_size, self.feature_vector, 1, 1))
-            for layer in self.UpLayers:
-                if layer.skip:
-                    x = layer(x, skip_list.pop())
-                else:
-                    x = layer(x)
-            x = self.output_layer(x)
-            y_rv[:, i, :, :] = self.min_range + nn.Sigmoid()(x[:, 0, :, :]) * (self.max_range - self.min_range)
-            y_mask[:, i, :, :] = x[:, 1, :, :]
+        x = self.output_layer(x).view(batch_size, self.n_future_steps, self.n_outputs, H, W)
 
         output = {}
-        output["rv"] = y_rv
-        output["mask_logits"] = y_mask
+        output["rv"] = self.min_range + nn.Sigmoid()(x[:, :, 0, :, :]) * (
+            self.max_range - self.min_range
+        )
+        output["mask_logits"] = x[:, :, 1, :, :]
+        quit()
 
         return output
 

@@ -125,8 +125,6 @@ class TCNet_lstm(BasePredictionModel):
         for layer in self.UpLayers:
             x = layer(x)
         x = self.output_layer(x)
-        print(x.shape)
-        quit()
         y[:, :, 0, :, :] = x
 
         for i in range(1, self.n_future_steps):
