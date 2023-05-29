@@ -12,9 +12,9 @@ from pytorch_lightning.strategies.ddp import DDPStrategy
 import subprocess
 
 from pcf.datasets.datasets import KittiOdometryModule
-# from pcf.models.SPFNet import SPFNet
+from pcf.models.SPFNet import SPFNet
 # from pcf.models.TCNet_lstm import TCNet_lstm
-from pcf.models.TCNet_lstm_skip import TCNet_lstm_skip
+# from pcf.models.TCNet_lstm_skip import TCNet_lstm_skip
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("./train.py")
@@ -101,9 +101,9 @@ if __name__ == "__main__":
     else:
         ###### Create new log
         resume_from_checkpoint = None
-        # config_filename = "config/parameters_spfnet.yml"
+        config_filename = "config/parameters_spfnet.yml"
         # config_filename = "config/parameters_tcnet_lstm.yml"
-        config_filename = "config/parameters_tcnet_lstm_skip.yml"
+        # config_filename = "config/parameters_tcnet_lstm_skip.yml"
         cfg = yaml.safe_load(open(config_filename))
         cfg["GIT_COMMIT_VERSION"] = str(
             subprocess.check_output(["git", "rev-parse", "--short", "HEAD"]).strip()
@@ -129,9 +129,9 @@ if __name__ == "__main__":
     print("data setup done")
 
     ###### Model
-    # model = SPFNet(cfg)
+    model = SPFNet(cfg)
     # model = TCNet_lstm(cfg)
-    model = TCNet_lstm_skip(cfg)
+    # model = TCNet_lstm_skip(cfg)
 
     ###### Load checkpoint
     if args.resume:

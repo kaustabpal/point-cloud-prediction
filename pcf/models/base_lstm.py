@@ -79,15 +79,19 @@ class BasePredictionModel(LightningModule):
         """Optimizers"""
         optimizer = torch.optim.Adam(self.parameters(), lr=self.cfg["TRAIN"]["LR"])
         #optimizer = Lion(self.parameters(), lr=self.cfg["TRAIN"]["LR"], weight_decay=1e-2)
-        scheduler = torch.optim.lr_scheduler.StepLR(
-            optimizer,
-            step_size=self.cfg["TRAIN"]["LR_EPOCH"],
-            gamma=self.cfg["TRAIN"]["LR_DECAY"],
-        )
+
+        # scheduler = torch.optim.lr_scheduler.StepLR(
+        #     optimizer,
+        #     step_size=self.cfg["TRAIN"]["LR_EPOCH"],
+        #     gamma=self.cfg["TRAIN"]["LR_DECAY"],
+        # )
+
         #scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer,
         #                        T_max = 10000, # Maximum number of iterations.
         #                        eta_min = 1e-6, verbose=False)
-        return [optimizer], [scheduler]
+
+        # return [optimizer], [scheduler]
+        return [optimizer]
         #return {
         #        'optimizer': optimizer,
         #        'lr_scheduler': scheduler,
