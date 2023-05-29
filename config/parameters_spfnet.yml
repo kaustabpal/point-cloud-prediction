@@ -3,7 +3,7 @@ EXPERIMENT:
 
 DATA_CONFIG:
   DATASET_NAME: KITTIOdometry
-  GENERATE_FILES: False # If true, the data will be pre-processed
+  GENERATE_FILES: True # If true, the data will be pre-processed
   COMPUTE_MEAN_AND_STD: False # If true, the mean and std of the training data will be computed to use it in MEAN and STD.
   DATALOADER:
     NUM_WORKER: 1
