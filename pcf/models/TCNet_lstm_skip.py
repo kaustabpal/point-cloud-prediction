@@ -206,7 +206,11 @@ class TCNet_lstm_skip(BasePredictionModel):
         
         x = x.view(batch_size, n_past_steps, self.feature_vector)
 
-        x, h_c = self.lstm_layer_encoder(x)
+        #x, h_c = self.lstm_layer_encoder(x)
+        x, (z, c) = self.lstm_layer_encoder(x) # added by KP
+        print("x shape: ", x.shape)
+        print("z shape: ", z.shape)
+        exit()
 
         for i in range(self.n_future_steps):
             x, h_c = self.lstm_layer_decoder(x[:, -1, :].view(batch_size, 1, self.feature_vector), h_c)
