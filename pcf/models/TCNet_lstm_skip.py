@@ -242,7 +242,7 @@ class TCNet_lstm_skip(BasePredictionModel):
             else:
                 x = layer(x)
         x = self.output_layer(x).view(batch_size, self.n_future_steps, self.n_outputs, H, W)
-        quit()
+        
         output = {}
         output["rv"] = self.min_range + nn.Sigmoid()(x[:, :, 0, :, :]) * (
             self.max_range - self.min_range
