@@ -101,12 +101,18 @@ class TCNet_lstm_skip(BasePredictionModel):
                     )
                 )
             
-        self.feature_conv_down = nn.Conv2d(
-                            self.channels[-1],
+        # self.feature_conv_down = nn.Conv2d(
+        #                     self.channels[-1],
+        #                     self.feature_vector,
+        #                     kernel_size=(2, 2),
+        #                     stride=(1, 1),
+        #                     padding=(0, 0),
+        #                     bias=True,
+        #                     )
+        
+        self.feature_linear_down = nn.Linear(
+                            self.channels[-1]*2*2,
                             self.feature_vector,
-                            kernel_size=(2, 2),
-                            stride=(1, 1),
-                            padding=(0, 0),
                             bias=True,
                             )
 
@@ -124,14 +130,22 @@ class TCNet_lstm_skip(BasePredictionModel):
                                 batch_first=True
                                 )
 
-        self.feature_conv_up = nn.ConvTranspose2d(
+        # self.feature_conv_up = nn.ConvTranspose2d(
+        #                     self.feature_vector,
+        #                     self.channels[-1],
+        #                     kernel_size=(2, 2),
+        #                     stride=(1, 1),
+        #                     padding=(0, 0),
+        #                     bias=True,
+        #                     )
+
+        self.feature_linear_up = nn.Linear(
                             self.feature_vector,
-                            self.channels[-1],
-                            kernel_size=(2, 2),
-                            stride=(1, 1),
-                            padding=(0, 0),
+                            self.channels[-1]*2*2,
                             bias=True,
                             )
+
+        self.unflatten = nn.Unflatten(1, (512, 2, 2))
 
         self.UpLayers = nn.ModuleList()
         for i in reversed(range(len(self.channels) - 1)):
@@ -202,29 +216,33 @@ class TCNet_lstm_skip(BasePredictionModel):
             x = layer(x)
             if layer.skip:
                 skip_list.append(x.clone())
-        x = self.feature_conv_down(x)
+        # x = self.feature_conv_down(x)
+        x = torch.flatten(x, start_dim=1)
+        x = self.feature_linear_down(x)
         
         x = x.view(batch_size, n_past_steps, self.feature_vector)
 
-        #x, h_c = self.lstm_layer_encoder(x)
-        x, (z, c) = self.lstm_layer_encoder(x) # added by KP
-        print("x shape: ", x.shape)
-        print("z shape: ", z.shape)
-        exit()
+        x, h_c = self.lstm_layer_encoder(x)
+        # x, (z, c) = self.lstm_layer_encoder(x) # added by KP
+        # print("x shape: ", x.shape)
+        # print("z shape: ", z.shape)
+        # exit()
 
         for i in range(self.n_future_steps):
             x, h_c = self.lstm_layer_decoder(x[:, -1, :].view(batch_size, 1, self.feature_vector), h_c)
             decoder_input[:, i, :] = x[:, -1, :]
         
-        x = decoder_input.view(batch_size*self.n_future_steps, self.feature_vector, 1, 1)
-        x = self.feature_conv_up(x)
+        x = torch.flatten(decoder_input.view(batch_size*self.n_future_steps, self.feature_vector, 1, 1), start_dim=1)
+        # x = self.feature_conv_up(x)
+        x = self.feature_linear_up(x)
+        x = self.unflatten(x)
         for layer in self.UpLayers:
             if layer.skip:
                 x = layer(x, skip_list.pop())
             else:
                 x = layer(x)
         x = self.output_layer(x).view(batch_size, self.n_future_steps, self.n_outputs, H, W)
-
+        quit()
         output = {}
         output["rv"] = self.min_range + nn.Sigmoid()(x[:, :, 0, :, :]) * (
             self.max_range - self.min_range
