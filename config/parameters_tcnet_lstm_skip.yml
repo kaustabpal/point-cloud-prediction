@@ -1,12 +1,12 @@
 EXPERIMENT:
-  ID: tcnet_lstm_skip # Give your experiment a unique ID which is used in the log
+  ID: tcnet_lstm_skip_5_steps # Give your experiment a unique ID which is used in the log
 
 DATA_CONFIG:
   DATASET_NAME: KITTIOdometry
   GENERATE_FILES: False # If true, the data will be pre-processed
   COMPUTE_MEAN_AND_STD: False # If true, the mean and std of the training data will be computed to use it in MEAN and STD.
   DATALOADER:
-    NUM_WORKER: 4
+    NUM_WORKER: 1
     SHUFFLE: True
   SPLIT: # Specify the sequences here. We follow the KITTI format.
     TRAIN:
@@ -45,8 +45,8 @@ DATA_CONFIG:
     - 1 #0.14 # Intensity
 
 MODEL:
-  N_PAST_STEPS: 10 # Number of input range images
-  N_FUTURE_STEPS: 10 # Number of predicted future range images
+  N_PAST_STEPS: 5 # Number of input range images
+  N_FUTURE_STEPS: 5 # Number of predicted future range images
   MASK_THRESHOLD: 0.5 # Threshold for valid point mask classification
   USE:
     XYZ: False # If true: x,y, and z coordinates will be used as additional input channels
