@@ -63,6 +63,7 @@ MODEL:
     - 64
     - 128
     - 256
+    - 512
   FEATURE_VECTOR: 1024
   CIRCULAR_PADDING: True
   NORM: batch # batch, group, none, instance
@@ -73,7 +74,7 @@ TRAIN:
   LR_EPOCH: 1
   LR_DECAY: 0.99
   MAX_EPOCH: 50
-  BATCH_SIZE: 8
+  BATCH_SIZE: 16
   BATCH_ACC: 4
   N_GPUS: 2
   LOG_EVERY_N_STEPS: 3

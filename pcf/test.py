@@ -16,7 +16,8 @@ from pytorch_lightning.strategies.ddp import DDPStrategy
 from pcf.datasets.datasets import KittiOdometryModule
 # from pcf.models.TCNet import TCNet
 # from pcf.models.SPFNet import SPFNet
-from pcf.models.TCNet_lstm import TCNet_lstm
+# from pcf.models.TCNet_lstm import TCNet_lstm
+from pcf.models.TCNet_lstm_skip import TCNet_lstm_skip
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser("./test.py")
@@ -84,7 +85,8 @@ if __name__ == "__main__":
 
     # model = TCNet.load_from_checkpoint(checkpoint_path, cfg=cfg)
     # model = SPFNet.load_from_checkpoint(checkpoint_path, cfg=cfg)
-    model = TCNet_lstm.load_from_checkpoint(checkpoint_path, cfg=cfg)
+    # model = TCNet_lstm.load_from_checkpoint(checkpoint_path, cfg=cfg)
+    model = TCNet_lstm_skip.load_from_checkpoint(checkpoint_path, cfg=cfg)
 
     # Only log if test is done on full data
     if args.limit_test_batches == 1.0:
